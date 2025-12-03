@@ -16,9 +16,18 @@ st.sidebar.header("Please filter here")
 symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT"]
 selected = st.sidebar.selectbox("Select a crypto pair", symbols)
 
-# Fetch ticker data
+# Fetch ticker data with error handling
 ticker_url = f"{BINANCE_API_BASE}/api/v3/ticker/24hr"
-ticker = requests.get(ticker_url, params={"symbol": selected}).json()
+response = requests.get(ticker_url, params={"symbol": selected})
+
+if response.status_code == 200:
+    ticker = response.json()
+    if "symbol" not in ticker or "lastPrice" not in ticker:
+        st.error("Error: Missing data in Binance API response. Please try again later.")
+        st.stop()
+else:
+    st.error(f"Error: Failed to fetch ticker data (Status Code: {response.status_code}).")
+    st.stop()
 
 # CoinMarketCap API setup
 url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest"
